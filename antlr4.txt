@@ -1,0 +1,97 @@
+lexer grammar SpaceBattleLexer;
+
+SHIP         : 'my_ship';
+ALLY         : 'ally_ship';
+ENEMY        : 'enemy_ship';
+MINE         : 'mine';
+PLANET       : 'planet';
+DIRECTION    : 'forward' | 'back' | 'left' | 'right';
+FIRE         : 'fire on';
+REFUEL       : 'refueling';
+DIAGNOSTICS  : 'diagnostic';
+
+STATUS       : 'status';
+MOVE         : 'move'; 
+PLACE_MINE   : 'place mine';
+EXPLORE      : 'explore';
+
+IF           : 'if' ;
+
+TRUE         : 'true';
+FALSE        : 'false';
+VAR          : [a-zA-Z_][a-zA-Z_0-9]*;
+NUMBER       : [0-9]+;
+
+COORDINATES   : '(' NUMBER ',' NUMBER ')';
+
+MORE_THEN    : '>';
+LESS_THEN    : '<';
+MATCH        : '==';
+UNMATCH      : '!=';
+OPEN_PAR     : '(';
+CLOSE_PAR    : ')';
+
+PLUS         : '+';
+MINUS        : '-';
+MUL          : '*';
+DIV          : '/';
+AND          : 'and';
+OR           : 'or';
+NOT          : 'not';
+
+WS           : [ \t\r\n]+ -> skip;
+
+parser grammar SpaceBattleParser;
+
+options { tokenVocab=SpaceBattleLexer; }
+
+commands     : command+ ;
+
+command      : moveCommand
+             | fireCommand
+             | refuelCommand
+             | diagnosticsCommand
+             | statusCommand
+             | placeMineCommand
+             | exploreCommand
+             | ifCommand
+             ;
+
+moveCommand  : SHIP DIRECTION;
+
+fireCommand  : (SHIP | ALLY | ENEMY) FIRE (ENEMY | MINE | PLANET);
+
+refuelCommand: SHIP REFUEL;
+
+diagnosticsCommand: SHIP DIAGNOSTICS;
+
+statusCommand: SHIP STATUS;
+
+placeMineCommand: SHIP PLACE_MINE COORDINATES;
+
+exploreCommand: SHIP EXPLORE COORDINATES;
+
+ifCommand      : IF OPEN_PAR logicalExpression CLOSE_PAR command ;
+
+logicalExpression
+                : relationalExpression ((AND | OR) relationalExpression)* ;
+
+relationalExpression
+                : arithmeticExpression ((LESS_THEN | MORE_THEN | MATCH | UNMATCH) arithmeticExpression)?            
+                ;
+
+arithmeticExpression
+                : term ((PLUS | MINUS) term)* ;
+
+term            : factor ((MUL | DIV) factor)* ;
+
+factor          : NUMBER
+                | VAR
+                | TRUE
+                | FALSE
+                | OPEN_PAR logicalExpression CLOSE_PAR ;
+
+
+my_ship forward my_ship place mine (20,10) my_ship explore (30,50) my_ship fire on enemy_ship 
+my_ship status if (fuel < 10) my_ship refueling
+
